@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f8f9fa;
+      color: #212529;
+      line-height: 1.6;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #fff;
+      padding: 32px 24px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 14px;
+      opacity: 0.85;
+    }
+
+    .header .version {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 24px 0 12px;
+      color: #1a1a2e;
+      border-bottom: 2px solid #0f3460;
+      padding-bottom: 6px;
+    }
+
+    .connection-info {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .connection-info h3 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #495057;
+    }
+
+    .code-block {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border-radius: 6px;
+      padding: 16px;
+      font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+
+    .code-block .keyword { color: #569cd6; }
+    .code-block .string { color: #ce9178; }
+    .code-block .comment { color: #6a9955; }
+
+    .event-card {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+
+    .event-card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .event-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      cursor: pointer;
+      user-select: none;
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .event-card-header:hover {
+      background: #e9ecef;
+    }
+
+    .event-name {
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: #0f3460;
+    }
+
+    .event-badges {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-direction {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .badge-auth {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .badge-no-auth {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .badge-category {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+
+    .event-card-body {
+      padding: 20px;
+      display: none;
+    }
+
+    .event-card-body.open {
+      display: block;
+    }
+
+    .event-description {
+      font-size: 14px;
+      color: #495057;
+      margin-bottom: 16px;
+    }
+
+    .schema-section {
+      margin-bottom: 16px;
+    }
+
+    .schema-section h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #343a40;
+      margin-bottom: 8px;
+    }
+
+    .schema-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .schema-table th {
+      background: #f1f3f5;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    .schema-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .schema-table .field-name {
+      font-family: 'Fira Code', 'Consolas', monospace;
+      color: #0f3460;
+    }
+
+    .schema-table .field-type {
+      color: #6c757d;
+    }
+
+    .schema-table .required-yes {
+      color: #d32f2f;
+      font-weight: 600;
+    }
+
+    .schema-table .required-no {
+      color: #9e9e9e;
+    }
+
+    .toggle-icon {
+      font-size: 12px;
+      color: #6c757d;
+      transition: transform 0.2s;
+    }
+
+    .toggle-icon.open {
+      transform: rotate(90deg);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-bar select, .filter-bar input {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    .filter-bar input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 24px;
+      color: #6c757d;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="container">
+    <h1>{{TITLE}}</h1>
+    <p>{{DESCRIPTION}}</p>
+    <span class="version">v{{VERSION}}</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <h2 class="section-title">Connection</h2>
+  <div class="connection-info">
+    <h3>Socket.io Client Connection Example</h3>
+    <div class="code-block">
+<span class="keyword">import</span> { io } <span class="keyword">from</span> <span class="string">'socket.io-client'</span>;<br><br>
+<span class="keyword">const</span> socket = io(<span class="string">'ws://localhost:3000'</span>, {<br>
+&nbsp;&nbsp;auth: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;token: <span class="string">'Bearer &lt;your-jwt-token&gt;'</span><br>
+&nbsp;&nbsp;}<br>
+});<br><br>
+<span class="comment">// Listen for successful connection</span><br>
+socket.on(<span class="string">'connected'</span>, (data) =&gt; {<br>
+&nbsp;&nbsp;<span class="comment">// data: { socketId, userId, rooms }</span><br>
+});<br><br>
+<span class="comment">// Listen for authentication errors</span><br>
+socket.on(<span class="string">'error'</span>, (err) =&gt; {<br>
+&nbsp;&nbsp;<span class="comment">// err: { code, message, timestamp }</span><br>
+});
+    </div>
+  </div>
+
+  <h2 class="section-title">Events</h2>
+
+  <div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="Search events...">
+    <select id="directionFilter">
+      <option value="">All Directions</option>
+      <option value="client-to-server">Client to Server</option>
+      <option value="server-to-client">Server to Client</option>
+      <option value="bidirectional">Bidirectional</option>
+    </select>
+    <select id="categoryFilter">
+      <option value="">All Categories</option>
+    </select>
+  </div>
+
+  <div id="eventsContainer"></div>
+
+</div>
+
+<div class="footer">
+  NestJS Engine WebSocket API Documentation
+</div>
+
+<script>
+  var EVENTS = {{EVENTS_JSON}};
+
+  function initFilters() {
+    var categories = [];
+    EVENTS.forEach(function(e) {
+      if (categories.indexOf(e.category) === -1) {
+        categories.push(e.category);
+      }
+    });
+    var categorySelect = document.getElementById('categoryFilter');
+    categories.forEach(function(cat) {
+      var opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+      categorySelect.appendChild(opt);
+    });
+  }
+
+  function buildFieldTable(fields, title) {
+    if (!fields || fields.length === 0) return '';
+    var html = '<div class="schema-section"><h4>' + title + '</h4>';
+    html += '<table class="schema-table"><thead><tr>';
+    html += '<th>Field</th><th>Type</th><th>Required</th><th>Description</th>';
+    html += '</tr></thead><tbody>';
+    fields.forEach(function(f) {
+      var reqClass = f.required ? 'required-yes' : 'required-no';
+      var reqText = f.required ? 'Yes' : 'No';
+      html += '<tr>';
+      html += '<td class="field-name">' + f.name + '</td>';
+      html += '<td class="field-type">' + f.type + '</td>';
+      html += '<td class="' + reqClass + '">' + reqText + '</td>';
+      html += '<td>' + f.description + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    return html;
+  }
+
+  function renderEvents(filter) {
+    var container = document.getElementById('eventsContainer');
+    var filtered = EVENTS.filter(function(e) {
+      if (filter.search && e.eventName.toLowerCase().indexOf(filter.search.toLowerCase()) === -1 &&
+          e.description.toLowerCase().indexOf(filter.search.toLowerCase()) === -1) {
+        return false;
+      }
+      if (filter.direction && e.direction !== filter.direction) return false;
+      if (filter.category && e.category !== filter.category) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="empty-state">No events found matching the filter criteria.</div>';
+      return;
+    }
+
+    var html = '';
+    filtered.forEach(function(e, idx) {
+      var authBadge = e.requiresAuth
+        ? '<span class="badge badge-auth">Auth Required</span>'
+        : '<span class="badge badge-no-auth">No Auth</span>';
+
+      var dirLabel = e.direction.replace(/-/g, ' ');
+
+      html += '<div class="event-card">';
+      html += '<div class="event-card-header" onclick="toggleCard(this)">';
+      html += '<span class="event-name">' + e.eventName + '</span>';
+      html += '<div class="event-badges">';
+      html += '<span class="badge badge-category">' + e.category + '</span>';
+      html += '<span class="badge badge-direction">' + dirLabel + '</span>';
+      html += authBadge;
+      html += '<span class="toggle-icon">&#9654;</span>';
+      html += '</div></div>';
+      html += '<div class="event-card-body">';
+      html += '<p class="event-description">' + e.description + '</p>';
+      html += buildFieldTable(e.payload, 'Request Payload');
+      html += buildFieldTable(e.response, 'Response');
+      if (e.example) {
+        html += '<div class="schema-section"><h4>Example</h4>';
+        html += '<div class="code-block">' + e.example + '</div></div>';
+      }
+      html += '</div></div>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  function toggleCard(header) {
+    var body = header.nextElementSibling;
+    var icon = header.querySelector('.toggle-icon');
+    body.classList.toggle('open');
+    icon.classList.toggle('open');
+  }
+
+  function applyFilters() {
+    renderEvents({
+      search: document.getElementById('searchInput').value,
+      direction: document.getElementById('directionFilter').value,
+      category: document.getElementById('categoryFilter').value,
+    });
+  }
+
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('directionFilter').addEventListener('change', applyFilters);
+  document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+
+  initFilters();
+  renderEvents({ search: '', direction: '', category: '' });
+</script>
+
+</body>
+</html>

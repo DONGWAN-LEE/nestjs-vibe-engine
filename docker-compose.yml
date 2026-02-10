@@ -1,0 +1,108 @@
+# =============================================================================
+# Docker Compose - NestJS Backend Engine
+#
+# Services:
+#   - mysql: MySQL 8.0 데이터베이스
+#   - redis: Redis 7 캐시 서버
+#   - app: NestJS 애플리케이션
+# =============================================================================
+
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: nestjs-engine-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: pp_engine
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command: >
+      --default-authentication-plugin=caching_sha2_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --max-connections=200
+      --innodb-buffer-pool-size=256M
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-ppassword']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - nestjs-engine-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: nestjs-engine-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nestjs-engine-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nestjs-engine-app
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      API_VERSION: v1
+      DATABASE_URL: mysql://root:password@mysql:3306/pp_engine
+      REDIS_MODE: direct
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ''
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      JWT_ACCESS_EXPIRES_IN: 1h
+      JWT_REFRESH_EXPIRES_IN: 30d
+      MAX_DEVICES_PER_USER: 1
+      DEFAULT_TIMEZONE: Asia/Seoul
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change-this-32-byte-key-in-prod!}
+      SWAGGER_ENABLED: 'false'
+      CORS_ORIGINS: '*'
+      LOG_DIR: ./logs
+    volumes:
+      - app-logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - nestjs-engine-network
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  app-logs:
+    driver: local
+
+networks:
+  nestjs-engine-network:
+    driver: bridge
